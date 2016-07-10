@@ -145,17 +145,25 @@ class One_Click_Launcher {
 		$options = json_decode( file_get_contents( $filepath ), true );
 
 		foreach ( $options as $key => $value ) {
-			if ( 'locations' != $key ) {
-				update_option( $key, $value );
-			} else {
+			// Menu Locations
+			if ( 'locations' == $key ) {
 				$locations = array();
-
-				foreach ( $value as $menu_location => $menu_name ) {
-					$menu = wp_get_nav_menu_object( $menu_name );
-					$locations[ $menu_location ] = $menu->term_id;
+				if ( is_array( $value ) ) {
+					foreach ( $value as $menu_location => $menu_name ) {
+						$menu = wp_get_nav_menu_object( $menu_name );
+						$locations[ $menu_location ] = $menu->term_id;
+					}
 				}
 
-				set_theme_mod( 'nav_menu_locations', $locations );
+				set_theme_mod( 'nav_menu_locations', $locations );								
+			} 
+			// Front & Blog Page
+			elseif ( in_array( $key, array( 'page_for_posts', 'page_on_front' ) ) ) {				
+				$object = get_page_by_path( $value, OBJECT, 'page' );
+				print $object->ID;
+				update_option( $key, $object->ID );
+			} else {
+				update_option( $key, $value );
 			}
 		}
 
