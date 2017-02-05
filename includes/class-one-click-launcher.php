@@ -144,9 +144,22 @@ class One_Click_Launcher {
 		$filepath = get_template_directory() . '/' . ONE_CLICK_EXPORTS_DIR . '/' . ONE_CLICK_CUSTOM_FILE;
 		$options = json_decode( file_get_contents( $filepath ), true );
 
-		foreach ( $options as $key => $value ) {
-			// Menu Locations
-			if ( 'locations' == $key ) {
+		foreach ( $options as $key => $value ) {			
+			if ( 'widget_menus' == $key ) {
+				$widgets = get_option( 'widget_nav_menu' );
+
+				foreach( $value as $widget_id => $menu_slug ) {					
+					foreach ( $widgets as $widget_key => $widget_value ) {						
+						if ( $widget_key == $widget_id ) {						
+							$menu = wp_get_nav_menu_object( $menu_slug );							
+							$widgets[ $widget_key ]['nav_menu'] = $menu->term_id;
+						}
+					}
+				}	
+
+				update_option( 'widget_nav_menu', $widgets );
+			// Widget Menus
+			} elseif ( 'locations' == $key ) {
 				$locations = array();
 				if ( is_array( $value ) ) {
 					foreach ( $value as $menu_location => $menu_name ) {
@@ -160,7 +173,6 @@ class One_Click_Launcher {
 			// Front & Blog Page
 			elseif ( in_array( $key, array( 'page_for_posts', 'page_on_front' ) ) ) {				
 				$object = get_page_by_path( $value, OBJECT, 'page' );
-				print $object->ID;
 				update_option( $key, $object->ID );
 			} else {
 				update_option( $key, $value );
